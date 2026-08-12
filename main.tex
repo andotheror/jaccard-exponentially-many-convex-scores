@@ -1,0 +1,556 @@
+\documentclass{article}
+\usepackage{iclr2027_conference,times}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{microtype}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{amsmath,amssymb}
+\usepackage{amsthm}
+\usepackage{mathtools}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}
+\newtheorem{remark}{Remark}
+\newcommand{\E}{\mathbb E}
+\newcommand{\R}{\mathbb R}
+\newcommand{\1}{\mathbf 1}
+\newcommand{\Jac}{\operatorname{Jac}}
+\newcommand{\CCdim}{\operatorname{CCdim}}
+\newcommand{\affdim}{\operatorname{affdim}}
+\newcommand{\supp}{\operatorname{supp}}
+
+\title{Jaccard Needs Exponentially Many Convex Scores}
+
+\author{\textbf{Pahan Dewasurendra} \\ Johns Hopkins University}
+
+\hypersetup{pdftitle={Jaccard Needs Exponentially Many Convex Scores},pdfauthor={Pahan Dewasurendra},pdfkeywords={convex calibration dimension, Jaccard index, intersection over union, surrogate losses, multi-label prediction, lower bounds},pdfsubject={preprint}}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Jaccard similarity, also called intersection over union, and the F1 score are
+pointwise monotone transforms of one another. Their convex surrogate
+complexities are nevertheless exponentially different. For instance-wise
+multi-label prediction with $s$ labels, we prove
+\[
+  2^{s-1}-1
+  \;\leq\;
+  \CCdim(L^{\rm Jac})
+  \;\leq\;
+  2^s-1.
+\]
+Thus every convex surrogate calibrated for Jaccard on all conditional label
+distributions needs exponentially many real-valued scores. In contrast, a
+recent tight result gives convex calibration dimension $\Theta(s^2)$ for F1.
+The lower bound comes from one explicit conditional distribution. It is
+supported on all sets containing a fixed core label, weights a set with $d$
+optional labels by $1/d!$, and makes exactly those $2^{s-1}$ reports Bayes
+optimal. Strict positive definiteness of the corresponding Jaccard block
+then collapses its feasible Bayes subspace to a point.
+
+We also identify an algebraic phase transition. In the normalized-overlap
+family interpolating from Dice/F1 to Jaccard, the exact score-matrix rank is
+$s^2-s+2$ at the F1 endpoint but $2^s$ after any positive Jaccard correction.
+Finally, we reconcile our theorem with a NeurIPS 2024 claim that an
+$s$-score convex logistic surrogate is Bayes-consistent for every multi-label
+loss. A two-label rational example gives zero surrogate regret and Jaccard
+regret $1/10$. The proof in that work transfers probability between two
+arbitrary label vectors, but its additive softmax probabilities form only an
+$s$-dimensional product family and cannot realize that transfer. Our results
+separate practical restricted-distribution methods from distribution-free
+convex calibration and show that, for Jaccard, this distinction is
+unavoidable.
+\end{abstract}
+
+\section{Introduction}
+
+An image mask, tag vector, or structured binary prediction can be represented
+as a subset of $s$ labels. Two standard scores for a report $B$ and outcome
+$A$ are
+\[
+ F_1(A,B)=\frac{2|A\cap B|}{|A|+|B|},
+ \qquad
+ \Jac(A,B)=\frac{|A\cap B|}{|A\cup B|}.
+ \tag{1}\label{eq:scores}
+\]
+Both equal one on identical nonempty sets, and we adopt the usual convention
+that both equal one on two empty sets. Pointwise they contain the same
+ordering information:
+\[
+  \Jac(A,B)=\frac{F_1(A,B)}{2-F_1(A,B)}.
+  \tag{2}\label{eq:monotone}
+\]
+This close relationship makes the contrast in this paper surprising.
+
+For a discrete loss, convex calibration dimension is the smallest $d$ for
+which some loss convex in a score vector $u\in\R^d$, together with some link
+from scores to reports, is calibrated on every conditional outcome
+distribution \citep{ramaswamy2016ccdim}. It asks how many real-valued outputs
+a distribution-free convex surrogate fundamentally needs. For F1, calibrated
+surrogates with $O(s^2)$ scores have been known since
+\citet{zhang2020fmeasure}. A new exact analysis proves the matching lower
+bound $\CCdim(L^{F_1})=\Theta(s^2)$ and identifies the exact score rank
+$s^2-s+2$ \citep{zhang2026exact}. We prove that Jaccard instead needs
+$\Theta(2^s)$ scores.
+
+This question matters because IoU is used precisely when coordinatewise
+metrics such as Hamming loss are inadequate. Bayes-optimal IoU decisions are
+already combinatorial even when conditional label probabilities factorize
+\citep{nowozin2014iou}. Practical losses include the Lov\'asz hinge and its
+extensions \citep{yu2018lovasz,berman2018lovasz}. Recent work shows that the
+usual Lov\'asz-hinge link is inconsistent for Jaccard
+\citep{finocchiaro2025lovasz}. That result concerns one surrogate and link.
+Our lower bound concerns every convex surrogate and every link below an
+exponential dimension.
+
+There is an apparent contradiction. \citet{mao2024multilabel} claim that a
+new $s$-score convex multi-label logistic loss is Bayes-consistent, with an
+excess-risk bound, for any multi-label loss. Jaccard is an explicit example
+in their theorem. Our lower bound rules this out. We resolve the contradiction
+constructively with an exact two-label counterexample and pinpoint the
+failed realizability step in their proof. The analogous full-output
+structured construction in \citet{mao2023structured} has one free score for
+each label vector, so its probability-transfer argument does not have this
+problem and is consistent with our exponential upper bound.
+
+\paragraph{Contributions.}
+\begin{enumerate}[leftmargin=*,itemsep=2pt,topsep=3pt]
+\item We prove an exponential lower bound
+$\CCdim(L^{\rm Jac})\geq 2^{s-1}-1$. The standard affine upper bound is
+$2^s-1$, determining the order exactly.
+\item We give an explicit factorially weighted Bayes witness and a short
+combinatorial identity showing that precisely all reports containing one
+core label tie. This produces exponentially many independent active Bayes
+constraints at one distribution.
+\item We prove a sharp rank discontinuity for a continuous family of
+normalized-overlap scores. The F1 endpoint has quadratic rank, while every
+positive Jaccard correction has full rank $2^s$.
+\item We give a rational two-label falsification certificate for the claimed
+general consistency of the low-dimensional multi-label logistic loss. It
+has zero surrogate regret but positive target regret, and does not depend on
+the empty-set convention.
+\end{enumerate}
+
+The lower bound is about expected per-instance Jaccard loss, also called the
+decision-theoretic formulation. It does not concern a ratio formed after
+aggregating confusion counts across an entire population. We return to this
+scope distinction in Section~\ref{sec:discussion}.
+
+\section{Related work and position}
+\label{sec:related}
+
+\paragraph{Convex calibration dimension.}
+\citet{ramaswamy2016ccdim} introduced convex calibration dimension for
+finite losses, proved affine and rank upper bounds, and developed the
+feasible-subspace lower bound used here. The flat-based elicitation framework
+of \citet{finocchiaro2021lower} recovers that theorem for minimizable convex
+surrogates and gives stronger global tools. Neither work analyzes Jaccard or
+IoU. An important distinction in both is that matrix rank supplies a generic
+upper bound, not a lower bound for arbitrary convex surrogates. This is why
+our full-rank theorem and factorial Bayes witness are separate contributions.
+
+\paragraph{F-measures.}
+F1 Bayes decisions can be recovered from a quadratic collection of
+conditional statistics. \citet{zhang2020fmeasure} turn this structure into
+convex calibrated surrogates. Most recently, \citet{zhang2026exact} prove
+the exact rank and affine dimension and construct a feasible-subspace witness
+giving the matching $\Theta(s^2)$ calibration dimension. Our witness is
+inspired by the same general question but differs in both weighting and
+geometry. It creates $2^{s-1}$ independent active comparisons rather than a
+quadratic family.
+
+\paragraph{IoU optimization and the Lov\'asz hinge.}
+\citet{nowozin2014iou} study Bayes decisions for IoU under a probabilistic
+model and derive an approximation for aggregate semantic segmentation. The
+Lov\'asz hinge and Lov\'asz-Softmax use submodularity to obtain practical
+convex objectives \citep{yu2018lovasz,berman2018lovasz}. For symmetric
+submodular losses, \citet{finocchiaro2022lovasz} identify the structured
+abstain target that the Lov\'asz hinge actually embeds. The recent
+label-dependent extension proves that the usual sign link is inconsistent
+for Jaccard when $s\geq3$ \citep{finocchiaro2025lovasz}. It leaves open
+whether a different convex surrogate or link of comparable dimension could
+be calibrated. Theorem~\ref{thm:main} rules out all of them.
+
+\paragraph{Low-dimensional structured surrogates.}
+The full-output structured logistic loss of \citet{mao2023structured} has a
+free score for each of the $2^s$ label vectors. The multi-label specialization
+of \citet{mao2024multilabel} replaces those scores by $s$ additive label
+scores and claims the same guarantee for every target loss. Section
+\ref{sec:counterexample} shows exactly why that reduction fails for Jaccard.
+Partial calibration under low-noise conditions and aggregation of several
+low-dimensional problems are studied by \citet{nueve2024tradeoff}. Those
+results complement our full-simplex lower bound.
+
+Table~\ref{tab:separation} summarizes the sharp separation. The F1 entries
+are from \citet{zhang2026exact}; the Jaccard entries are proved here.
+
+\begin{table}[t]
+\centering
+\caption{F1 and Jaccard are pointwise monotone-equivalent but have different
+convex surrogate geometry.}
+\label{tab:separation}
+\begin{tabular}{lcc}
+\toprule
+Quantity on $s$ labels & F1/Dice & Jaccard/IoU\\
+\midrule
+Score-matrix rank & $s^2-s+2$ & $2^s$\\
+Loss-column affine dimension & $s^2-s+1$ & $2^s-1$\\
+Convex calibration dimension & $\Theta(s^2)$ & $\Theta(2^s)$\\
+Explicit bounds & $\Omega(s^2)$ to $s^2-s+1$
+                & $2^{s-1}-1$ to $2^s-1$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Setup and calibration dimension}
+\label{sec:setup}
+
+Let $[s]=\{1,\ldots,s\}$ and let outcomes and reports both range over
+$\mathcal Y=2^{[s]}$, of cardinality $N=2^s$. Define the Jaccard score matrix
+$K\in\R^{N\times N}$ and loss matrix $L^{\rm Jac}$ by
+\[
+ K_{A,B}=\begin{cases}
+  1,&A=B=\varnothing,\\
+  |A\cap B|/|A\cup B|,&\text{otherwise},
+ \end{cases}
+ \qquad
+ L^{\rm Jac}=\1\1^\top-K.
+ \tag{3}\label{eq:jacmatrix}
+\]
+Rows index outcomes and columns index reports. For a conditional distribution
+$q\in\Delta_N$, the Bayes reports maximize $q^\top K_{\cdot,B}$.
+
+A surrogate is a function $\psi:\mathcal C\to\R_+^N$, where
+$\mathcal C\subseteq\R^d$ is convex and each coordinate $\psi_y$ is convex.
+It is calibrated for $L$ if it admits a link from $\mathcal C$ to reports
+such that, at every $q\in\Delta_N$, approaching optimal surrogate risk cannot
+retain a suboptimal target report. The convex calibration dimension
+$\CCdim(L)$ is the smallest such $d$ \citep{ramaswamy2016ccdim}. This
+definition permits arbitrary convex losses and arbitrary links.
+
+For report $B$, its trigger polytope is
+\[
+ Q_B=\{q\in\Delta_N:q^\top L_{\cdot,B}
+              \leq q^\top L_{\cdot,C}\ \text{for every }C\}.
+ \tag{4}\label{eq:trigger}
+\]
+Let $\mu_{Q_B}(q)$ be the dimension of the largest linear subspace of
+two-sided feasible directions of $Q_B$ at $q$. The feasible-subspace theorem
+of \citet{ramaswamy2016ccdim} states
+\[
+ \CCdim(L)\geq \|q\|_0-\mu_{Q_B}(q)-1,
+ \qquad q\in Q_B.
+ \tag{5}\label{eq:ramalower}
+\]
+The newer flat-based framework recovers this bound and can strengthen it in
+other problems \citep{finocchiaro2021lower}. Our witness makes
+$\mu_{Q_B}(q)=0$, so the original theorem is already sharp enough.
+
+\section{A full-rank phase transition}
+\label{sec:rank}
+
+We first isolate an algebraic distinction between F1 and Jaccard. For
+$0\leq\lambda<2$, define the normalized-overlap score
+\[
+ S_\lambda(A,B)
+ =\frac{(2-\lambda)|A\cap B|}
+ {|A|+|B|-\lambda|A\cap B|}
+ \tag{6}\label{eq:family}
+\]
+for nonempty pairs, with value zero if exactly one set is empty and value one
+if both are empty. Then $S_0=F_1$ and $S_1=\Jac$. If $D=F_1(A,B)$, then
+\[
+ S_\lambda(A,B)=\frac{(2-\lambda)D}{2-\lambda D},
+ \tag{7}\label{eq:transform}
+\]
+so every member is a pointwise strictly increasing transform of F1.
+
+\begin{theorem}[Rank phase transition]
+\label{thm:rank}
+Under the empty-empty convention above, the score matrix of $S_0$ has rank
+$s^2-s+2$. For every $\lambda\in(0,2)$, the score matrix of $S_\lambda$ is
+strictly positive definite and has rank $2^s$.
+\end{theorem}
+
+The endpoint rank is the exact F1 result of \citet{zhang2026exact}. We prove
+the positive-$\lambda$ statement. Write $x=|A\cap B|$, $a=|A|$, and
+$b=|B|$. For nonempty sets,
+\[
+ S_\lambda(A,B)
+ =(2-\lambda)\int_0^\infty
+ x e^{-t(a+b-\lambda x)}\,dt.
+ \tag{8}\label{eq:integral}
+\]
+Let $\chi_A\in\{0,1\}^s$ be the incidence vector. Expanding
+$x e^{\lambda tx}$ into tensor powers gives, for coefficients $c_A$ on the
+nonempty sets,
+\begin{align}
+ c^\top S_\lambda c
+ &=(2-\lambda)\int_0^\infty
+ \sum_{r\geq1}\frac{(\lambda t)^{r-1}}{(r-1)!}
+ \left\|\sum_{A\ne\varnothing}
+ c_Ae^{-t|A|}\chi_A^{\otimes r}\right\|_2^2dt.
+ \tag{9}\label{eq:tensor}
+\end{align}
+This is nonnegative. If it vanished, every displayed tensor sum would
+vanish. For any nonempty $T\subseteq[s]$, inspect a coordinate of the
+$|T|$th tensor that lists every element of $T$. It gives
+\[
+ \sum_{A\supseteq T}c_Ae^{-t|A|}=0.
+ \tag{10}\label{eq:zeta}
+\]
+At any fixed $t>0$, these are all coordinates of the Boolean upper-zeta
+transform of $c_Ae^{-t|A|}$. The transform is invertible, so every $c_A=0$.
+The nonempty block is strictly positive definite. The empty-set convention
+adds an isolated $1\times1$ block, proving the theorem. A different positive
+definiteness proof for the Jaccard endpoint was given by
+\citet{bouchard2013jaccard}. Equation~\eqref{eq:tensor} is included because
+it covers the full family and makes the discontinuity transparent.
+
+Full score rank alone is not a lower bound on arbitrary convex calibration
+dimension. It does imply that the $N$ score columns, and hence the $N$ loss
+columns, are affinely independent. Therefore
+\[
+ \affdim(L^{\rm Jac})=N-1.
+ \tag{11}\label{eq:affdim}
+\]
+The generic affine construction of \citet{ramaswamy2016ccdim} now gives
+$\CCdim(L^{\rm Jac})\leq N-1$. The next section proves that no polynomial
+improvement is possible.
+
+\section{The exponential calibration barrier}
+\label{sec:barrier}
+
+Fix one core label, denoted $\star$, and write $O=[s]\setminus\{\star\}$,
+with $n=s-1$. Consider the $2^n$ outcomes containing the core:
+\[
+ \mathcal U=\{\{\star\}\cup D:D\subseteq O\}.
+ \tag{12}\label{eq:U}
+\]
+Define a distribution $p$ supported on $\mathcal U$ by
+\[
+ p_{\{\star\}\cup D}
+ =\frac{1}{Z_n|D|!},
+ \qquad
+ Z_n=\sum_{d=0}^n\binom nd\frac1{d!}.
+ \tag{13}\label{eq:witness}
+\]
+
+\begin{lemma}[Factorial tie]
+\label{lem:tie}
+Under $p$, precisely the reports in $\mathcal U$ maximize expected Jaccard
+similarity.
+\end{lemma}
+
+Here is the main identity. For $C\subseteq O$, ignore the common normalizer
+$Z_n$ and write the expected score of report $\{\star\}\cup C$ as
+\[
+ W(C)=\sum_{D\subseteq O}\frac1{|D|!}
+ \frac{1+|C\cap D|}{1+|C\cup D|}.
+ \tag{14}\label{eq:W}
+\]
+Then
+\[
+ W(C)=\sum_{d=0}^n\binom nd\frac1{(d+1)!},
+ \tag{15}\label{eq:constant}
+\]
+independent of $C$. To see why, add one optional label $j\notin C$ and pair
+$D=E$ with $D=E\cup\{j\}$. Put
+$a=|E\cap C|$, $b=|E\setminus C|$, and $c=|C|$. The paired increment is
+\[
+ \frac1{c+b+2}
+ \left[
+  \frac1{(a+b+1)!}
+  -\frac{a+1}{(a+b)!(c+b+1)}
+ \right].
+ \tag{16}\label{eq:increment}
+\]
+For every fixed $b$, summing over the $a$ choices cancels by
+\[
+ \sum_{a=0}^c\binom ca\frac1{(a+b+1)!}
+ =\frac1{c+b+1}\sum_{a=0}^c
+ \binom ca\frac{a+1}{(a+b)!}.
+ \tag{17}\label{eq:identity}
+\]
+Thus adding $j$ does not change $W$, and $W(C)=W(\varnothing)$ gives
+\eqref{eq:constant}. If a report omits $\star$, adding $\star$ strictly
+increases its intersection with every outcome in the support while leaving
+the union unchanged. Such a report is strictly suboptimal. Appendix
+\ref{app:tie} gives the complete cancellation proof.
+
+\begin{theorem}[Exponential Jaccard calibration dimension]
+\label{thm:main}
+For every $s\geq2$,
+\[
+  2^{s-1}-1\leq\CCdim(L^{\rm Jac})\leq2^s-1.
+ \tag{18}\label{eq:main}
+\]
+In particular, $\CCdim(L^{\rm Jac})=\Theta(2^s)$.
+\end{theorem}
+
+\begin{proof}
+The upper bound follows from \eqref{eq:affdim}. For the lower bound, let
+$r=|\mathcal U|=2^{s-1}$ and fix $B_0\in\mathcal U$. By
+Lemma~\ref{lem:tie}, $p\in Q_{B_0}$ and every comparison between $B_0$ and
+$B\in\mathcal U$ is active.
+
+Restrict the score matrix to rows and columns in $\mathcal U$. It is a
+principal submatrix of the strictly positive definite Jaccard matrix, so its
+$r$ columns are linearly independent. Therefore the $r-1$ differences
+\[
+ K_{\mathcal U,B}-K_{\mathcal U,B_0},
+ \qquad B\in\mathcal U\setminus\{B_0\},
+ \tag{19}\label{eq:diffs}
+\]
+are linearly independent. Their common orthogonal complement in $\R^r$ is
+one-dimensional. The vector $p_{\mathcal U}$ belongs to it by the Bayes tie,
+so that complement is $\operatorname{span}(p_{\mathcal U})$.
+
+Now let $v$ be a two-sided feasible direction of $Q_{B_0}$ at $p$. Since
+$p$ is zero outside $\mathcal U$, two-sided feasibility in the simplex forces
+$v$ to be zero there. Every active comparison forces $v_{\mathcal U}$ to be
+orthogonal to \eqref{eq:diffs}. Hence $v_{\mathcal U}=\alpha p_{\mathcal U}$.
+The simplex constraint gives $0=\1^\top v=\alpha$, because
+$\1^\top p=1$. Thus $v=0$ and $\mu_{Q_{B_0}}(p)=0$. Since
+$\|p\|_0=r$, \eqref{eq:ramalower} gives
+$\CCdim(L^{\rm Jac})\geq r-1$.
+\end{proof}
+
+The proof uses positive definiteness only to certify independence of active
+Bayes comparisons. Positive definiteness by itself would give only an affine
+upper bound. The factorial witness is what turns the algebra into a lower
+bound for every convex surrogate.
+
+\section{A two-label falsification certificate}
+\label{sec:counterexample}
+
+We now reconcile Theorem~\ref{thm:main} with the purported $s$-score
+surrogate of \citet{mao2024multilabel}. Their general multi-label logistic
+loss can be written
+\[
+ \widetilde L(h,y)
+ =\sum_{B\subseteq[s]} \Jac(B,y)
+ \log\!\left(\sum_{C\subseteq[s]}
+ e^{\operatorname{score}_h(C)-\operatorname{score}_h(B)}\right),
+ \quad
+ \operatorname{score}_h(B)=\sum_{i=1}^s y_i^B h_i,
+ \tag{20}\label{eq:maoloss}
+\]
+where $y_i^B=1$ for $i\in B$ and $-1$ otherwise. The link predicts
+$\{i:h_i\geq0\}$. Theorem 5.1 and Corollary 5.2 of that work claim a
+Jaccard excess-risk bound and Bayes consistency.
+
+Take $s=2$, order sets as
+$\varnothing,\{1\},\{2\},\{1,2\}$, and put
+\[
+ p=\left(0,\frac35,\frac1{10},\frac3{10}\right).
+ \tag{21}\label{eq:counterp}
+\]
+The expected Jaccard scores of the four reports are
+\[
+ a=\E_p[K_{Y,\cdot}]
+ =\left(0,\frac34,\frac14,\frac{13}{20}\right).
+ \tag{22}\label{eq:countera}
+\]
+Thus the unique Bayes report is $\{1\}$.
+
+Let
+\[
+ s_B(h)=\frac{e^{\operatorname{score}_h(B)}}
+ {\sum_Ce^{\operatorname{score}_h(C)}}.
+\]
+The conditional surrogate risk from \eqref{eq:maoloss} is exactly
+\[
+ -\sum_B a_B\log s_B(h).
+ \tag{23}\label{eq:crossentropy}
+\]
+The probabilities $s_B(h)$ form a product distribution on the two labels.
+The information projection of $a/\sum_Ba_B$ onto this family matches its
+label marginals, which here are
+\[
+ m_1=\frac{a_{\{1\}}+a_{\{1,2\}}}{\sum_Ba_B}=\frac{28}{33},
+ \qquad
+ m_2=\frac{a_{\{2\}}+a_{\{1,2\}}}{\sum_Ba_B}=\frac6{11}.
+ \tag{24}\label{eq:marginals}
+\]
+Both exceed $1/2$. Consequently the unique finite minimizer is
+\[
+ h_1^*=\frac12\log\frac{28}{5}>0,
+ \qquad
+ h_2^*=\frac12\log\frac65>0.
+ \tag{25}\label{eq:hstar}
+\]
+The link predicts $\{1,2\}$, whose Jaccard score is $13/20$, instead of the
+Bayes score $3/4$. Its target regret is $1/10$ at zero surrogate regret. The
+distribution is supported on nonempty outcomes, so this contradiction is
+independent of how $\Jac(\varnothing,\varnothing)$ is defined.
+
+The proof gap is equally concrete. The proof of \citet{mao2024multilabel}
+defines $s^\mu$ by moving probability between two arbitrary label vectors
+while holding every other coordinate fixed, then asserts that completeness
+of the $s$ scalar score classes realizes $s^\mu$. But additive softmax
+probabilities lie on an $s$-dimensional product manifold. With two labels
+they always satisfy
+\[
+ s_\varnothing s_{\{1,2\}}=s_{\{1\}}s_{\{2\}}.
+ \tag{26}\label{eq:productconstraint}
+\]
+An arbitrary two-coordinate transfer does not preserve this identity.
+Coordinatewise completeness makes every $h_i$ attainable, not every point
+of the $(2^s-1)$-dimensional probability simplex. The same transfer appears
+in a recent EUM analysis \citep{mohri2026mmo}, but that work addresses
+population-level generalized metrics rather than the per-instance loss of
+Theorem~\ref{thm:main}.
+
+\section{Implications and limitations}
+\label{sec:discussion}
+
+\paragraph{Why monotone equivalence is insufficient.}
+Equation~\eqref{eq:monotone} preserves the ranking of scores for a fixed
+outcome, but Bayes decisions rank expectations of those scores. Expectation
+does not commute with a nonlinear monotone transform. The factorial witness
+shows that this distinction changes convex calibration dimension from
+quadratic for F1 to exponential for Jaccard. The rank transition in
+Theorem~\ref{thm:rank} is an algebraic reflection of the same phenomenon.
+
+\paragraph{What the result rules out.}
+No loss convex in a subexponential-dimensional report vector, with any link,
+can be calibrated for expected instance-wise Jaccard on the full conditional
+simplex. This includes more than coordinate-separable or additive-score
+losses. The obstruction is distribution-free and link-independent.
+
+\paragraph{What remains possible.}
+The theorem does not rule out nonconvex surrogates, restricted conditional
+families, partial calibration under low noise, or several parallel
+low-dimensional problems whose total information is exponential. These are
+genuine escape routes \citep{nueve2024tradeoff}. Nor is calibration dimension
+itself a running-time lower bound. A method may represent exponentially many
+scores implicitly and use structured inference. Full-output structured
+surrogates \citep{mao2023structured} and the generic affine construction
+match the exponential order.
+
+The target here is the decision-theoretic risk
+$\E[1-\Jac(h(X),Y)]$. Dataset-level micro IoU, ratios of expected aggregate
+counts, and empirical utility maximization define different decision
+problems \citep{nowozin2014iou,mohri2026mmo}. Our theorem does not transfer
+to those formulations without a separate analysis.
+
+Finally, our upper and lower bounds differ by a factor of two. Determining
+the exact Jaccard calibration dimension is open. It is also open whether
+every positive member of \eqref{eq:family} has exponential calibration
+dimension. The full-rank proof alone cannot establish that claim, and we do
+not make it.
+
+\bibliography{references}
+\bibliographystyle{iclr2027_conference}
+
+\appendix
+\input{appendix}
+
+\end{document}
