@@ -1,0 +1,327 @@
+\section{Calibration-dimension details}
+\label{app:ccdim}
+
+This appendix records the exact geometric objects used in
+Theorem~\ref{thm:main}. Let $L\in\R_+^{n\times k}$ be a finite loss matrix,
+with outcome distributions in $\Delta_n$. For report $t$, write
+\[
+ Q_t^L=\{q\in\Delta_n:q^\top L_{\cdot,t}
+            \leq q^\top L_{\cdot,t'}\text{ for every }t'\in[k]\}.
+ \tag{27}\label{eq:triggerapp}
+\]
+For a convex set $Q\subseteq\R^n$ and $p\in Q$, its cone of feasible
+directions is
+\[
+ F_Q(p)=\{v:\text{there is }\epsilon_0>0\text{ such that }
+ p+\epsilon v\in Q\text{ for every }\epsilon\in(0,\epsilon_0)\}.
+\]
+The feasible subspace is $F_Q(p)\cap(-F_Q(p))$, and its dimension is
+$\mu_Q(p)$. Theorem 16 of \citet{ramaswamy2016ccdim} gives
+\[
+ \CCdim(L)\geq\|p\|_0-\mu_{Q_t^L}(p)-1
+ \quad\text{for every }p\in Q_t^L.
+ \tag{28}\label{eq:ramatheorem}
+\]
+It applies to the calibration definition used in their paper and does not
+require the conditional surrogate risk to attain its infimum.
+
+For completeness, their affine upper bound states
+\[
+ \CCdim(L)\leq\affdim(L),
+ \tag{29}\label{eq:affupper}
+\]
+where $\affdim(L)$ is the affine dimension of the set of loss columns. One
+way to view the construction is to choose affine coordinates for the loss
+columns, estimate the corresponding conditional expectations with a convex
+quadratic loss, and decode by minimizing the reconstructed target risk.
+
+\section{Proof details for the rank transition}
+\label{app:rank}
+
+We prove the positive-$\lambda$ part of Theorem~\ref{thm:rank} with all
+interchanges explicit. Let $\mathcal Y_+=2^{[s]}\setminus\{\varnothing\}$.
+For $A,B\in\mathcal Y_+$, abbreviate
+\[
+ x=|A\cap B|,\qquad a=|A|,\qquad b=|B|.
+\]
+Because $0\leq\lambda<2$ and $x\leq\min(a,b)$, the denominator in
+\eqref{eq:family} is positive. The elementary identity
+\[
+ \frac{x}{a+b-\lambda x}
+ =\int_0^\infty xe^{-t(a+b-\lambda x)}dt
+ \tag{30}\label{eq:laplaceapp}
+\]
+gives \eqref{eq:integral}.
+
+For incidence vectors $\chi_A,\chi_B\in\{0,1\}^s$,
+\[
+ x^r=\langle\chi_A^{\otimes r},\chi_B^{\otimes r}\rangle.
+ \tag{31}\label{eq:tensoridentity}
+\]
+Moreover,
+\[
+ xe^{\lambda tx}
+ =\sum_{r=1}^\infty
+ \frac{(\lambda t)^{r-1}}{(r-1)!}x^r.
+ \tag{32}\label{eq:seriesapp}
+\]
+All coefficients in this series are nonnegative. Since the set family is
+finite, Tonelli's theorem applies after separating the positive and negative
+parts of the finite coefficient vector, or equivalently after first expanding
+the finite quadratic form. Equations~\eqref{eq:laplaceapp}--\eqref{eq:seriesapp}
+yield
+\begin{align}
+ \sum_{A,B\in\mathcal Y_+}c_Ac_BS_\lambda(A,B)
+ &=(2-\lambda)\int_0^\infty
+ \sum_{r=1}^\infty\frac{(\lambda t)^{r-1}}{(r-1)!}
+ \left\langle
+ \sum_Ac_Ae^{-t|A|}\chi_A^{\otimes r},
+ \sum_Bc_Be^{-t|B|}\chi_B^{\otimes r}
+ \right\rangle dt\\
+ &=(2-\lambda)\int_0^\infty
+ \sum_{r=1}^\infty\frac{(\lambda t)^{r-1}}{(r-1)!}
+ \left\|\sum_Ac_Ae^{-t|A|}\chi_A^{\otimes r}\right\|_2^2dt.
+ \tag{33}\label{eq:quadraticapp}
+\end{align}
+The integrand is continuous and nonnegative. If the integral is zero, the
+integrand is zero for every $t>0$. Since $\lambda>0$, every tensor norm in
+the sum is zero.
+
+Fix a nonempty $T=\{i_1,\ldots,i_r\}\subseteq[s]$. The
+$(i_1,\ldots,i_r)$ coordinate of the $r$th tensor sum is
+\[
+ \sum_{A\in\mathcal Y_+}c_Ae^{-t|A|}
+ \prod_{j=1}^r\chi_A(i_j)
+ =\sum_{A\supseteq T}c_Ae^{-t|A|}.
+ \tag{34}\label{eq:zetacoord}
+\]
+Fix any $t>0$ and put $d_A=c_Ae^{-t|A|}$. Equation~\eqref{eq:zetacoord}
+says that the upper-zeta transform $T\mapsto\sum_{A\supseteq T}d_A$ is zero
+on the poset of nonempty subsets. Ordered by decreasing cardinality, its
+matrix is triangular with ones on the diagonal. Hence $d_A=0$ for every
+$A$, and therefore $c_A=0$. The nonempty block is strictly positive
+definite. The empty set has score zero against every nonempty set and score
+one against itself, so it contributes a separate positive $1\times1$ block.
+
+At $\lambda=0$, only the $r=1$ term remains in
+\eqref{eq:seriesapp}. The variation of $e^{-t|A|}$ with cardinality allows
+more than $s$ rank, but not full rank. \citet{zhang2026exact} prove the exact
+value $s^2-s+2$, including the empty-set block.
+
+Finally, if a square matrix $K$ of size $N$ is nonsingular, its $N$ columns
+are linearly independent and thus affinely independent. The affine map
+$k_B\mapsto\1-k_B$ preserves affine independence, so the loss columns of
+$\1\1^\top-K$ have affine dimension $N-1$. This proves
+\eqref{eq:affdim}.
+
+\section{The factorial tie identity}
+\label{app:tie}
+
+We give a full proof of Lemma~\ref{lem:tie}. Recall that $O$ contains the
+$n=s-1$ optional labels. For $C\subseteq O$, define $W(C)$ by
+\eqref{eq:W}. We first show that $W(C)$ is invariant under adding an element.
+
+Fix $j\in O\setminus C$. Pair the outcome index $D=E$ with
+$D=E\cup\{j\}$ for each $E\subseteq O\setminus\{j\}$. Put
+\[
+ a=|E\cap C|,\qquad b=|E\setminus C|,\qquad c=|C|.
+\]
+For $D=E$, adding $j$ to the report leaves the intersection unchanged and
+increases the union size by one. Its contribution to
+$W(C\cup\{j\})-W(C)$ is
+\[
+ -\frac{a+1}{(a+b)!(c+b+1)(c+b+2)}.
+ \tag{35}\label{eq:nojinD}
+\]
+For $D=E\cup\{j\}$, adding $j$ to the report leaves the union unchanged and
+increases the intersection by one. Its contribution is
+\[
+ \frac1{(a+b+1)!(c+b+2)}.
+ \tag{36}\label{eq:jinD}
+\]
+Their sum is \eqref{eq:increment}.
+
+For a fixed $b$, the number of choices of $E$ having a given $a$ is
+$\binom ca\binom{n-c-1}{b}$. The second binomial coefficient and the factor
+$1/(c+b+2)$ do not depend on $a$. It remains to prove
+\eqref{eq:identity}. Multiply its left-hand side by $c+b+1$ and use
+$c+b+1=(c-a)+(a+b+1)$:
+\begin{align}
+ (c+b+1)\sum_{a=0}^c\binom ca\frac1{(a+b+1)!}
+ &=\sum_{a=0}^c\binom ca\frac1{(a+b)!}
+   +\sum_{a=0}^c(c-a)\binom ca\frac1{(a+b+1)!}\\
+ &=\sum_{a=0}^c\binom ca\frac1{(a+b)!}
+   +c\sum_{a=0}^{c-1}\binom{c-1}{a}\frac1{(a+b+1)!}\\
+ &=\sum_{a=0}^c\binom ca\frac1{(a+b)!}
+   +\sum_{a=0}^ca\binom ca\frac1{(a+b)!}\\
+ &=\sum_{a=0}^c(a+1)\binom ca\frac1{(a+b)!}.
+ \tag{37}\label{eq:identityproof}
+\end{align}
+In the third line we shifted the index and used
+$a\binom ca=c\binom{c-1}{a-1}$. Hence every fixed-$b$ sum of paired
+increments is zero, and $W(C\cup\{j\})=W(C)$.
+
+Repeatedly removing elements from $C$ gives $W(C)=W(\varnothing)$. Directly,
+\[
+ W(\varnothing)
+ =\sum_{D\subseteq O}\frac1{|D|!(1+|D|)}
+ =\sum_{d=0}^n\binom nd\frac1{(d+1)!},
+ \tag{38}\label{eq:wempty}
+\]
+which proves \eqref{eq:constant}. After division by $Z_n$, all reports in
+$\mathcal U$ therefore tie.
+
+Now take any report $B$ with $\star\notin B$ and put
+$B^+=B\cup\{\star\}$. Every outcome $A$ in the support of $p$ contains
+$\star$. Therefore
+\[
+ |B^+\cup A|=|B\cup A|,
+ \qquad
+ |B^+\cap A|=|B\cap A|+1.
+\]
+The Jaccard score of $B^+$ is strictly larger for every such $A$. Since all
+support probabilities are positive, $B$ is strictly suboptimal. Thus exactly
+$\mathcal U$ is Bayes optimal.
+
+\section{Feasible-subspace calculation}
+\label{app:feasible}
+
+We expand the geometric step in Theorem~\ref{thm:main}. Let
+$K_{\mathcal U,\mathcal U}$ be the $r\times r$ principal Jaccard block, where
+$r=2^{s-1}$. It is positive definite by Theorem~\ref{thm:rank}. Fix
+$B_0\in\mathcal U$ and form the matrix whose $r-1$ columns are
+\[
+ d_B=K_{\mathcal U,B}-K_{\mathcal U,B_0},
+ \qquad B\in\mathcal U\setminus\{B_0\}.
+ \tag{39}\label{eq:dBapp}
+\]
+These columns are independent. Indeed, if
+$\sum_{B\ne B_0}\alpha_Bd_B=0$, define coefficients $\beta_B=\alpha_B$ for
+$B\ne B_0$ and $\beta_{B_0}=-\sum_{B\ne B_0}\alpha_B$. Then
+$K_{\mathcal U,\mathcal U}\beta=0$. Nonsingularity gives $\beta=0$, hence
+every $\alpha_B=0$. Thus the matrix $D$ of differences has rank $r-1$.
+
+The tie identity says $D^\top p_{\mathcal U}=0$. Since
+$\dim\ker(D^\top)=1$ and $p_{\mathcal U}\ne0$,
+\[
+ \ker(D^\top)=\operatorname{span}(p_{\mathcal U}).
+ \tag{40}\label{eq:kernelapp}
+\]
+
+Let $v\in F_{Q_{B_0}}(p)\cap(-F_{Q_{B_0}}(p))$. If $A\notin\mathcal U$,
+then $p_A=0$. Feasibility of both $v$ and $-v$ in the nonnegative orthant
+forces $v_A=0$. For every $B\in\mathcal U$, the target risks of $B$ and
+$B_0$ tie at $p$. The corresponding inequality in $Q_{B_0}$ is active.
+Feasibility in both directions forces its directional derivative to be zero:
+\[
+ v_{\mathcal U}^\top
+ (L^{\rm Jac}_{\mathcal U,B}-L^{\rm Jac}_{\mathcal U,B_0})=0.
+ \tag{41}\label{eq:activeapp}
+\]
+Since loss differences are negative score differences,
+\eqref{eq:activeapp} is $D^\top v_{\mathcal U}=0$. By
+\eqref{eq:kernelapp}, $v_{\mathcal U}=\alpha p_{\mathcal U}$. Finally,
+two-sided feasibility in the affine hull of the simplex requires
+$\1^\top v=0$. Because $\1^\top p=1$, this implies $\alpha=0$. The feasible
+subspace is $\{0\}$ and has dimension zero.
+
+Notice that constraints against reports outside $\mathcal U$ were not needed.
+They are strict at $p$ by Lemma~\ref{lem:tie} and therefore impose no
+additional equality on a two-sided feasible direction.
+
+\section{Exact analysis of the logistic counterexample}
+\label{app:counterexample}
+
+For the set order
+$\varnothing,\{1\},\{2\},\{1,2\}$, the Jaccard score matrix is
+\[
+ K=
+ \begin{pmatrix}
+ 1&0&0&0\\
+ 0&1&0&1/2\\
+ 0&0&1&1/2\\
+ 0&1/2&1/2&1
+ \end{pmatrix}.
+ \tag{42}\label{eq:Ktwo}
+\]
+Multiplying \eqref{eq:counterp} by this matrix gives
+\eqref{eq:countera}. The unique maximum $3/4$ occurs at report $\{1\}$.
+
+We next derive the conditional surrogate risk. Let
+$r_B=\operatorname{score}_h(B)$. Each term in \eqref{eq:maoloss} satisfies
+\[
+ \log\sum_Ce^{r_C-r_B}
+ =\log\sum_Ce^{r_C}-r_B=-\log s_B(h).
+ \tag{43}\label{eq:logsoftmaxapp}
+\]
+Taking expectation over $Y$ and interchanging two finite sums gives
+\[
+ \E_p\widetilde L(h,Y)
+ =-\sum_B\E_p[\Jac(B,Y)]\log s_B(h)
+ =-\sum_Ba_B\log s_B(h).
+ \tag{44}\label{eq:riskapp}
+\]
+
+Because $r_B=\sum_i y_i^Bh_i$, $s_B(h)$ is the product of two Bernoulli
+probabilities. If $q_B=a_B/A$ with $A=\sum_Ba_B=33/20$, then
+\eqref{eq:riskapp} is $A$ times the cross entropy from $q$ to this product
+family. Writing $\pi_i=\Pr_{s(h)}(i\in B)$, the part depending on $h$ is
+\[
+ A\sum_{i=1}^2[-m_i\log\pi_i-(1-m_i)\log(1-\pi_i)],
+ \tag{45}\label{eq:binaryce}
+\]
+up to a constant independent of $h$. Each binary cross entropy is strictly
+convex in its logit and uniquely minimized at $\pi_i=m_i$. Direct arithmetic
+gives
+\[
+ A=\frac{33}{20},\qquad
+ m_1=\frac{3/4+13/20}{33/20}=\frac{28}{33},\qquad
+ m_2=\frac{1/4+13/20}{33/20}=\frac6{11}.
+ \tag{46}\label{eq:marginalarithmetic}
+\]
+Under the $\{-1,1\}$ score encoding,
+$\pi_i=e^{h_i}/(e^{h_i}+e^{-h_i})$. Solving for $h_i$ yields
+\eqref{eq:hstar}. Both coordinates are positive, so the sign link returns
+$\{1,2\}$. Its target loss exceeds the Bayes loss by
+\[
+ \left(1-\frac{13}{20}\right)-\left(1-\frac34\right)=\frac1{10}.
+ \tag{47}\label{eq:regretapp}
+\]
+The conditional surrogate risk is minimized exactly, so its regret is zero.
+
+For reference, the product constraint \eqref{eq:productconstraint} follows
+immediately from the four unnormalized weights
+\[
+ e^{-h_1-h_2},\quad e^{h_1-h_2},\quad
+ e^{-h_1+h_2},\quad e^{h_1+h_2}.
+\]
+Both cross-products equal one before applying the common softmax normalizer.
+
+\section{Finite exact checks}
+\label{app:checks}
+
+The proof is symbolic, but small cases provide useful falsification checks.
+For $s=2,3,4,5$, exact rational calculations for the witness
+\eqref{eq:witness} give
+\[
+\begin{array}{c|cccc}
+s & |\mathcal U| & \text{tied score} & \text{best score outside }\mathcal U
+  & \operatorname{rank}(K_{\mathcal U,\mathcal U})\\ \hline
+2&2&3/4&1/4&2\\
+3&4&13/21&2/7&4\\
+4&8&73/136&39/136&8\\
+5&16&501/1045&292/1045&16
+\end{array}
+\tag{48}\label{eq:smallchecks}
+\]
+
+The calculation enumerates all $2^s$ outcomes and reports using rational
+arithmetic, checks equality of the scores over $\mathcal U$, strict
+separation outside $\mathcal U$, and exact rank of the rational principal
+matrix. The two-label certificate separately checks
+\[
+ a=(0,3/4,1/4,13/20),\quad
+ (m_1,m_2)=(28/33,6/11),\quad
+ \text{regret}=1/10.
+\]
+No numerical approximation is used in these checks.
