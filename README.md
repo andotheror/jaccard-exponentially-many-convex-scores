@@ -31,22 +31,7 @@ convex calibration dimension, Jaccard index, intersection over union, surrogate 
 
 ## Files
 
-- `main.pdf`
-- `main.tex`
-- `references.bib`
-- `iclr2027_conference.sty`, `iclr2027_conference.bst`, `natbib.sty`, `fancyhdr.sty`
-- `main.pdf.ots`, `README.md.ots` OpenTimestamps priority proofs
-
-## Versions
-
-`main.pdf` is the current version and the one to read. `main_old_2026-08-12.pdf` is
-the file as first published on 2026-08-12, kept only so that its OpenTimestamps
-proof stays independently verifiable:
-
-```
-ots verify main_old_2026-08-12.pdf.ots
-```
-
-The two differ by a corrected bibliography entry. The mathematics is unchanged.
-`README_old_2026-08-12.md` is likewise the README as first published, kept for the
-same reason.
+- `main_old_2026-08-12.pdf`, the paper as first published, with its OpenTimestamps proof `main_old_2026-08-12.pdf.ots`.
+- `main.pdf`, the current version.
+- source: `appendix.tex`, `iclr2027_conference.bst`, `iclr2027_conference.sty`, `main.tex`, `references.bib`.
+- also: `main.bbl`, `main.out`.
